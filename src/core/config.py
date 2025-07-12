@@ -14,11 +14,11 @@ class AppConfig(BaseModel):
     dir_name_file_priority: str = "file_priority"
     data_time_format: str = "%d%m%Y %H-%M-%S"
 
-    use_snils: dict[str, bool] = {
+    use_superServiceCode: dict[str, bool] = {
         "bak": True,
         "mag": True,
-        "spo": False,
-        "asp": False,
+        "spo": True,
+        "asp": True,
     }
 
     pk_id: dict[str, int] = {

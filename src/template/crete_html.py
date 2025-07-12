@@ -19,7 +19,7 @@ from src.list_priority import get_list_priority
 @dataclass
 class Student:
     number: Optional[int]
-    snils: Optional[str]
+    superServiceCode: Optional[str]
     total_points: Optional[str]
     marks: Optional[List[str]]
     total_points_id: Optional[str]
@@ -58,10 +58,6 @@ def create_html(
     """
     # Получаем список приоритетов, если требуется
     row_priority = []
-    if pk_name in ("bak", "mag"):
-        row_priority = get_list_priority(
-            directory=dir_name_for_priority,
-        )
 
     # Парсим XML-файл
     root_node = parse_xml_file(f"{file_xml_name}.xml")
@@ -79,14 +75,14 @@ def create_html(
         "current_date_time": current_date_time,
     }
 
-    # Получаем список СНИЛСов для отдельной квоты
-    l_snils_in_another_competition = parse_root_node(root_node, pk_name, row_priority)
+    # Получаем список КОДОВ СП для отдельной квоты
+    l_superServiceCode_in_another_competition = parse_root_node(root_node, pk_name, row_priority)
 
     # Обрабатываем каждую образовательную программу
     for competition in root_node:
         for row_program in competition:
             info, students = process_program(
-                row_program, pk_name, row_priority, l_snils_in_another_competition
+                row_program, pk_name, row_priority, l_superServiceCode_in_another_competition
             )
             if info and students:
                 main_list["information"].append(info)
@@ -97,10 +93,10 @@ def create_html(
         template_dir = os.path.join(meipass, "template")
     else:
         template_dir = "src/template/"
-    render_html(template_dir, main_list, f"spiski_abitur_{pk_name}_2024.html")
+    render_html(template_dir, main_list, f"spiski_abitur_{pk_name}_2025.html")
 
 
-def process_program(row_program, pk_name, row_priority, l_snils_in_another_competition):
+def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_another_competition):
     """
     Обрабатывает одну образовательную программу и возвращает информацию и список студентов.
     """
@@ -131,10 +127,10 @@ def process_program(row_program, pk_name, row_priority, l_snils_in_another_compe
             s = str(competition_type)
             if pk_name in ("bak", "mag"):
                 s_competition_type = (
-                    " - " + s[0].lower() + s[1:] + "<br> <H4>Зачисление на бюджет - в "
+                    " - " + s[0].lower() + s[1:] + " Зачисление на бюджет - в "
                     "соответствии с высшим приоритетом, "
                     "по которому поступающий проходит по "
-                    "конкурсу</H4>"
+                    "конкурсу"
                 )
             else:
                 s_competition_type = f" - {s[0].lower() + s[1:]}"
@@ -152,7 +148,7 @@ def process_program(row_program, pk_name, row_priority, l_snils_in_another_compe
     statement = 0  # Количество заявлений
     l_short_title = []  # Вступительные испытания
     l_number = []  # Номер заявлений по порядку
-    l_snils = []  # СНИЛС
+    l_superServiceCode = []  # Код СП
     l_entrant_id = []  # id
     l_total_points = []  # Сумма баллов
     l_preference_category_title = []  # Преимущественное право зачисления
@@ -202,40 +198,34 @@ def process_program(row_program, pk_name, row_priority, l_snils_in_another_compe
                 # Находим ID каждой записи в таблице, для сверки и выставления высшего приоритета
 
                 number = None
-                snils = sub2_row_program.get("snils")
+                superServiceCode = sub2_row_program.get("superServiceCode")
                 entrant_id = sub2_row_program.get(
                     "entrantId",
-                )  # Снилс ИЛИ Номер
+                )  # КОДОВ СП ИЛИ Номер
                 if position is not None:
                     if (
-                        snils is None
+                        superServiceCode is None
                         or s_competition_type_title == "Отдельная квота"
-                        or snils in l_snils_in_another_competition
-                        or not settings.app.use_snils[pk_name]
+                        or superServiceCode in l_superServiceCode_in_another_competition
+                        or not settings.app.use_superServiceCode[pk_name]
                     ):
                         for PersonalNumber in sub2_row_program.findall(
                             "entrantPersonalNumber",
                         ):
                             number = PersonalNumber.text
                             statement += 1
-                            l_snils.append(number)
+                            l_superServiceCode.append(number)
                     else:
                         statement += 1
-                        l_snils.append(snils)
+                        l_superServiceCode.append(superServiceCode)
 
                     l_entrant_id.append(entrant_id)
-                    if sub2_row_program.get("acceptedEntrant") is not None and (
-                        sub2_row_program.get("snils") is not None or number is not None
-                    ):
-                        l_accepted = sub2_row_program.get(
-                            "acceptedEntrant",
-                        )
-
-                        if l_accepted == "true":
-                            l_l_accepted.append("Да")
-                        elif l_accepted == "false" or l_accepted is None:
-                            l_l_accepted.append("Нет")
-
+                    if sub2_row_program.get("accepted") is not None:
+                        l_accepted = sub2_row_program.get("accepted")
+                        l_l_accepted.append("Да" if l_accepted == "true" else "Нет")
+                    else:
+                        l_l_accepted.append("")
+                        
                     req_comp_id_highest_priority = sub2_row_program.get(
                         "reqCompId",
                     )
@@ -378,7 +368,7 @@ def process_program(row_program, pk_name, row_priority, l_snils_in_another_compe
 
         student_data = {
             "number": l_number,  # Number
-            "snils": l_snils,  # СНИЛС или Личный номер
+            "superServiceCode": l_superServiceCode,  # КОДОВ СП или Личный номер
             "total_points": (
                 average_edu_institution_mark_list
                 if pk_name == "spo"
@@ -399,7 +389,7 @@ def process_program(row_program, pk_name, row_priority, l_snils_in_another_compe
 
 
 def parse_root_node(root_node, pk_name, row_priority):
-    l_snils_in_another_competition = []
+    l_superServiceCode_in_another_competition = []
     if pk_name in ("bak", "mag"):
         for competition in root_node:
             for row_program in competition:
@@ -410,21 +400,21 @@ def parse_root_node(root_node, pk_name, row_priority):
                 for sub_row_program in row_program:
                     for sub2_row_program in sub_row_program:
                         position = sub2_row_program.get("position")
-                        snils = sub2_row_program.get("snils")
+                        superServiceCode = sub2_row_program.get("superServiceCode")
                         if (
                             position is not None
                             and s_competition_type_title == "Отдельная квота"
-                            and snils not in l_snils_in_another_competition
+                            and superServiceCode not in l_superServiceCode_in_another_competition
                         ):
-                            l_snils_in_another_competition.append(snils)
-    return l_snils_in_another_competition
+                            l_superServiceCode_in_another_competition.append(superServiceCode)
+    return l_superServiceCode_in_another_competition
 
 
 def process_competition_data(
     competition,
     pk_name,
     row_priority,
-    l_snils_in_another_competition,
+    l_superServiceCode_in_another_competition,
 ):
     # Инициируем переменных
     s_compensation_type_short_title = ""
@@ -452,10 +442,10 @@ def process_competition_data(
             s = str(competition_type)
             if pk_name in ("bak", "mag"):
                 s_competition_type = (
-                    " - " + s[0].lower() + s[1:] + "<br> <H4>Зачисление на бюджет - в "
+                    " - " + s[0].lower() + s[1:] + "Зачисление на бюджет - в "
                     "соответствии с высшим приоритетом, "
                     "по которому поступающий проходит по "
-                    "конкурсу</H4>"
+                    "конкурсу"
                 )
             else:
                 s_competition_type = f" - {s[0].lower() + s[1:]}"

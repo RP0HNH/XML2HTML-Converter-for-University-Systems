@@ -7,9 +7,9 @@
     <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary-color: #2a9d8f;
-            --accent-color: #006124;
-            --text-color: #264653;
+            --primary-color: #00703c;
+            --accent-color: #b0b0b0;
+            --text-color: #363636;
             --bg-color: #f4f4f9;
             --card-bg: #ffffff;
             --border-radius: 8px;
@@ -133,9 +133,9 @@
 <main>
             <!-- Field for search -->
             <div class="search-bar">
-                <label for="snilsInput">Введите СНИЛС или номер абитуриента:</label>
+                <label for="superServiceCodeInput">Введите код ГОСУСЛУГИ или номер абитуриента:</label>
                 <div class="search-input">
-                    <input type="text" id="snilsInput" placeholder="СНИЛС или номер">
+                    <input type="text" id="superServiceCodeInput" placeholder="Код ГОСУСЛУГИ или номер">
                     <button id="searchButton">Найти абитуриента</button>
                 </div>
             </div>
@@ -169,7 +169,7 @@
                         <thead>
                         <tr>
                             <th rowspan="2">№</th>
-                            <th rowspan="2">СНИЛС или Личный номер</th>
+                            <th rowspan="2">Код ГОСУСЛУГИ или Личный номер</th>
                             <th rowspan="2">Сумма баллов</th>
                             {% if pk_name in ("bak", "mag") %}
                             <th colspan="{{ information[info_id].colspan[0] }}">
@@ -183,7 +183,7 @@
                                 Договор на оказание платных образовательных услуг
                             </th>
                             <th rowspan="2">Приоритет</th>
-                            <th rowspan="2">Высший приоритет</th>
+                            <th rowspan="2"> </th>
                             {% elif pk_name in ("spo", "asp") %}
                             <th rowspan="2">Преимущественное право</th>
                             {% if pk_name == "spo" and
@@ -225,7 +225,7 @@
                         <tr>
                             {% endif %}
                             <td>{{ student.number[student_id] }}</td>
-                            <td>{{ student.snils[student_id] }}</td>
+                            <td>{{ student.superServiceCode[student_id] }}</td>
                             <td>{{ student.total_points[student_id] }}</td>
                             {% if pk_name in ("bak", "mag") %} {% if pk_name == "bak" %}
                             <td>{{ student.marks[student_id][0] }}</td>
@@ -278,7 +278,7 @@
     <script>
         document.getElementById('searchButton').addEventListener('click', searchStudent);
         function searchStudent() {
-            const input = document.getElementById("snilsInput").value.trim();
+            const input = document.getElementById("superServiceCodeInput").value.trim();
             const comps = document.querySelectorAll(".competition-block");
             let found = false;
             comps.forEach(c => {
