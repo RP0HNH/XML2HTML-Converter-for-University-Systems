@@ -179,9 +179,8 @@
                             <th rowspan="2">Основание приема без ВИ</th>
                             <th rowspan="2">Преимущественное право зачисления</th>
                             <th rowspan="2">Сдан оригинал (отметка на ЕПГУ)</th>
-                            <th rowspan="2">
-                                Договор на оказание платных образовательных услуг
-                            </th>
+                            <th rowspan="2">Согласие на зачисление</th>
+                            <th rowspan="2">Статус</th>
                             <th rowspan="2">Приоритет</th>
                             <th rowspan="2"> </th>
                             {% elif pk_name in ("spo", "asp") %}
@@ -196,7 +195,6 @@
                             <th rowspan="2">Сумма баллов за ИД</th>
                             <th rowspan="2">Сдан оригинал</th>
                             {% if pk_name == "asp" %}
-                            <th rowspan="2">Согласие на зачисление</th>
                             {% endif %}
                             <th rowspan="2">Статус</th>
                             <th rowspan="2">Примечание</th>
@@ -238,7 +236,8 @@
                             <td></td>
                             <td>{{ student.preference_category_title[student_id] }}</td>
                             <td>{{ student.original_passed[student_id] }}</td>
-                            <td></td>
+                            <td>{{ student.accepted[student_id] }}</td>
+                            <td>{{ student.status[student_id] }}</td>
                             <td>{{ student.print_priority[student_id] }}</td>
                             <td>{{ student.vip_priority[student_id] }}</td>
                             {% elif pk_name in ("spo", "asp") %}
@@ -254,9 +253,6 @@
                             {% endif %}
                             <td>{{ student.total_points_id[student_id] }}</td>
                             <td>{{ student.original_passed[student_id] }}</td>
-                            {% if pk_name == "asp" %}
-                            <td>{{ student.accepted[student_id] }}</td>
-                            {% endif %}
                             <td>{{ student.status[student_id] }}</td>
                             <td></td>
                             <td></td>

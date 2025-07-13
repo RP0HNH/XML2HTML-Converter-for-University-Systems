@@ -29,6 +29,10 @@ class Student:
     vip_priority: Optional[str]
     accepted: Optional[str]
     status: Optional[str]
+    targetAdmissionKind: Optional[str] = None
+    targetAdmissionExtOrgUnit: Optional[str] = None
+    targetAdmissionExtOrgUnitEmployer: Optional[str] = None
+    targetAdmissionOfferId: Optional[str] = None
 
 
 @dataclass
@@ -43,6 +47,9 @@ class ProgramInfo:
     statement_count: Optional[int]
     colspan: Optional[int]
     short_titles: Optional[List[str]]
+    targetAdmissionKind: Optional[List[str]]
+    targetAdmissionExtOrgUnit: Optional[str] = None
+    targetAdmissionExtOrgUnitEmployer: Optional[str] = None
 
 
 def create_html(
@@ -127,13 +134,16 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
             s = str(competition_type)
             if pk_name in ("bak", "mag"):
                 s_competition_type = (
-                    " - " + s[0].lower() + s[1:] + " Зачисление на бюджет - в "
+                    " - " + s[0].lower() + s[1:] + " зачисление на бюджет - в "
                     "соответствии с высшим приоритетом, "
                     "по которому поступающий проходит по "
                     "конкурсу"
                 )
             else:
                 s_competition_type = f" - {s[0].lower() + s[1:]}"
+                if competition_type == "Целевой прием":
+                    s_competition_type += ' (competitionType="Целевой прием")'
+                
     plan_recruitment = row_program.get("plan")
     if plan_recruitment is not None:
         if s_compensation_type_short_title == "по договору":
@@ -162,6 +172,10 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
     l_l_accepted = []  # list Согласие на зачисление
     average_edu_institution_mark_list = []  # СПО Средний балл по аттестат
     l_vip_priority = []  # Высший приоритет (Да/' ')
+    l_targetAdmissionKind = [] 
+    l_targetAdmissionExtOrgUnit = []
+    l_targetAdmissionExtOrgUnitEmployer = []
+    l_targetAdmissionOfferId = []
 
     for sub_row_program in row_program:
         for sub2_row_program in sub_row_program:
@@ -173,6 +187,15 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
             elif pk_name == "asp":
                 colspan = 2
             program_spec = sub2_row_program.get("programSpec")
+            targetAdmissionKind = sub2_row_program.get("targetAdmissionKind")
+            targetAdmissionExtOrgUnit = sub2_row_program.findtext("targetAdmissionExtOrgUnit")
+            targetAdmissionExtOrgUnitEmployer = sub2_row_program.findtext("targetAdmissionExtOrgUnitEmployer")
+            targetAdmissionOfferId = sub2_row_program.findtext("targetAdmissionOfferId")
+
+            l_targetAdmissionKind.append(targetAdmissionKind)
+            l_targetAdmissionExtOrgUnit.append(targetAdmissionExtOrgUnit)
+            l_targetAdmissionExtOrgUnitEmployer.append(targetAdmissionExtOrgUnitEmployer)
+            l_targetAdmissionOfferId.append(targetAdmissionOfferId)
             short_title = sub2_row_program.get("shortTitle")
             if short_title is not None:
                 l_short_title.append(short_title)
@@ -382,6 +405,10 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
             "vip_priority": l_vip_priority,  # Высший приоритет (Да/' ')
             "accepted": l_l_accepted,  # Согласие на зачисление
             "status": l_status,  # Статус
+            "targetAdmissionKind": l_targetAdmissionKind,
+            "targetAdmissionExtOrgUnit": l_targetAdmissionExtOrgUnit,
+            "targetAdmissionExtOrgUnitEmployer": l_targetAdmissionExtOrgUnitEmployer,
+            "targetAdmissionOfferId": l_targetAdmissionOfferId,
         }
         return info_list, student_data
     else:
