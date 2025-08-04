@@ -107,9 +107,7 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
     """
     Обрабатывает одну образовательную программу и возвращает информацию и список студентов.
     """
-    # Инициируем переменных
     s_compensation_type_short_title = ""
-    average_edu_institution_mark = ""
     s_competition_type = ""
     s_competition_type_title = ""
     edu_program_id = ""
@@ -120,9 +118,7 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
         edu_program_subject = row_program.get("eduProgramSubject")
         edu_program_id = row_program.get("id")
     edu_program_form = row_program.get("eduProgramForm")
-    compensation_type_short_title = row_program.get(
-        "compensationTypeShortTitle",
-    )
+    compensation_type_short_title = row_program.get("compensationTypeShortTitle")
     if compensation_type_short_title is not None:
         s_compensation_type_short_title = str(compensation_type_short_title)
     competition_type = row_program.get("competitionType")
@@ -134,16 +130,13 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
             s = str(competition_type)
             if pk_name in ("bak", "mag"):
                 s_competition_type = (
-                    " - " + s[0].lower() + s[1:] + " зачисление на бюджет - в "
+                    " - " + s[0].lower() + s[1:] + " Зачисление на бюджет - в "
                     "соответствии с высшим приоритетом, "
                     "по которому поступающий проходит по "
                     "конкурсу"
                 )
             else:
                 s_competition_type = f" - {s[0].lower() + s[1:]}"
-                if competition_type == "Целевой прием":
-                    s_competition_type += ' (competitionType="Целевой прием")'
-                
     plan_recruitment = row_program.get("plan")
     if plan_recruitment is not None:
         if s_compensation_type_short_title == "по договору":
@@ -153,32 +146,33 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
                 plan_recruitment = str(plan_recruitment)
             else:
                 plan_recruitment = str(plan_recruitment) + " за исключением квот"
-    # Инициируем начальные данные по каждому абитуриенту в каждой образовательной программе
-    l_row_entrant_req_com_id_and_ent_id_and_com_id = []  # массив для проверки
-    statement = 0  # Количество заявлений
-    l_short_title = []  # Вступительные испытания
-    l_number = []  # Номер заявлений по порядку
-    l_superServiceCode = []  # Код СП
-    l_entrant_id = []  # id
-    l_total_points = []  # Сумма баллов
-    l_preference_category_title = []  # Преимущественное право зачисления
-    l_marks = []  # Результаты ВИ
-    l_total_points_id = []  # Сумма баллов за индивидуальные достижения
-    l_original_passed = []  # Сдан оригинал:да/нет
-    l_status = []  # Статус
-    l_print_priority = []  # Приоритет
-    l_req_comp_id_highest_priority = []  # Нужно для Высший приоритет
-    l_benefit_special_category_title = []  # Отдельная квота
-    l_l_accepted = []  # list Согласие на зачисление
-    average_edu_institution_mark_list = []  # СПО Средний балл по аттестат
-    l_vip_priority = []  # Высший приоритет (Да/' ')
-    l_targetAdmissionKind = [] 
-    l_targetAdmissionExtOrgUnit = []
-    l_targetAdmissionExtOrgUnitEmployer = []
-    l_targetAdmissionOfferId = []
 
+    # Инициализация списков для накопления данных
+    l_row_entrant_req_com_id_and_ent_id_and_com_id = []
+    statement = 0
+    l_short_title = []
+    l_number = []
+    l_superServiceCode = []
+    l_entrant_id = []
+    l_total_points = []
+    l_preference_category_title = []
+    l_marks = []
+    l_total_points_id = []
+    l_original_passed = []
+    l_status = []
+    l_print_priority = []
+    l_req_comp_id_highest_priority = []
+    l_benefit_special_category_title = []
+    l_l_accepted = []
+    average_edu_institution_mark_list = []
+    l_vip_priority = []
+
+    program_spec = None  # Объявляем заранее
+
+    # Обход вложенных элементов с проверкой их наличия
     for sub_row_program in row_program:
         for sub2_row_program in sub_row_program:
+            # Определяем colspan один раз
             colspan = 0
             if pk_name == "bak":
                 colspan = 3
@@ -186,172 +180,123 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
                 colspan = 1
             elif pk_name == "asp":
                 colspan = 2
-            program_spec = sub2_row_program.get("programSpec")
-            targetAdmissionKind = sub2_row_program.get("targetAdmissionKind")
-            targetAdmissionExtOrgUnit = sub2_row_program.findtext("targetAdmissionExtOrgUnit")
-            targetAdmissionExtOrgUnitEmployer = sub2_row_program.findtext("targetAdmissionExtOrgUnitEmployer")
-            targetAdmissionOfferId = sub2_row_program.findtext("targetAdmissionOfferId")
 
-            l_targetAdmissionKind.append(targetAdmissionKind)
-            l_targetAdmissionExtOrgUnit.append(targetAdmissionExtOrgUnit)
-            l_targetAdmissionExtOrgUnitEmployer.append(targetAdmissionExtOrgUnitEmployer)
-            l_targetAdmissionOfferId.append(targetAdmissionOfferId)
+            # Присваиваем program_spec, если еще не назначен
+            if program_spec is None:
+                program_spec = sub2_row_program.get("programSpec")
+
             short_title = sub2_row_program.get("shortTitle")
-            if short_title is not None:
+            if short_title:
                 l_short_title.append(short_title)
-            position = sub2_row_program.get("position")  # Номер по порядку
-            if position is not None:
-                [l_number.append(int(x)) for x in position.split()]
-                preference_category_title = sub2_row_program.get(
-                    "preferenceCategoryTitle",
-                )
-                benefit_special_category_title = sub2_row_program.get(
-                    "benefitSpecialCategoryTitle",
-                )
-                if preference_category_title is not None:
-                    l_preference_category_title.append("Да")
-                else:
-                    l_preference_category_title.append("Нет")
-                if benefit_special_category_title is not None:
-                    l_benefit_special_category_title.append(
-                        benefit_special_category_title,
-                    )
-                else:
-                    l_benefit_special_category_title.append("-")
-                # Находим ID каждой записи в таблице, для сверки и выставления высшего приоритета
+
+            position = sub2_row_program.get("position")
+            if position:
+                # Добавляем номера заявлений (переделал на цикл для надежности)
+                for pos in position.split():
+                    try:
+                        l_number.append(int(pos))
+                    except ValueError:
+                        pass
+
+                preference_category_title = sub2_row_program.get("preferenceCategoryTitle")
+                benefit_special_category_title = sub2_row_program.get("benefitSpecialCategoryTitle")
+
+                l_preference_category_title.append("Да" if preference_category_title else "Нет")
+                l_benefit_special_category_title.append(benefit_special_category_title if benefit_special_category_title else "-")
+
+                superServiceCode = sub2_row_program.get("superServiceCode")
+                entrant_id = sub2_row_program.get("entrantId")
 
                 number = None
-                superServiceCode = sub2_row_program.get("superServiceCode")
-                entrant_id = sub2_row_program.get(
-                    "entrantId",
-                )  # КОДОВ СП ИЛИ Номер
-                if position is not None:
-                    if (
-                        superServiceCode is None
-                        or s_competition_type_title == "Отдельная квота"
-                        or superServiceCode in l_superServiceCode_in_another_competition
-                        or not settings.app.use_superServiceCode[pk_name]
-                    ):
-                        for PersonalNumber in sub2_row_program.findall(
-                            "entrantPersonalNumber",
-                        ):
-                            number = PersonalNumber.text
+                if (
+                    superServiceCode is None
+                    or s_competition_type_title == "Отдельная квота"
+                    or superServiceCode in l_superServiceCode_in_another_competition
+                    or not settings.app.use_superServiceCode[pk_name]
+                ):
+                    # Добавляем все entrantPersonalNumber если есть
+                    for PersonalNumber in sub2_row_program.findall("entrantPersonalNumber"):
+                        number = PersonalNumber.text
+                        if number:
                             statement += 1
                             l_superServiceCode.append(number)
-                    else:
-                        statement += 1
+                else:
+                    statement += 1
+                    if superServiceCode:
                         l_superServiceCode.append(superServiceCode)
 
+                if entrant_id:
                     l_entrant_id.append(entrant_id)
-                    if sub2_row_program.get("accepted") is not None:
+
+                if sub2_row_program.get("accepted") is not None:
                         l_accepted = sub2_row_program.get("accepted")
                         l_l_accepted.append("Да" if l_accepted == "true" else "Нет")
-                    else:
+                else:
                         l_l_accepted.append("")
-                        
-                    req_comp_id_highest_priority = sub2_row_program.get(
-                        "reqCompId",
-                    )
-                    if req_comp_id_highest_priority is not None:
-                        l_req_comp_id_highest_priority.append(
-                            str(req_comp_id_highest_priority),
-                        )
 
-                    status = sub2_row_program.get("status")
-                    if status is not None:
-                        l_status.append(status)
+                req_comp_id_highest_priority = sub2_row_program.get("reqCompId")
+                if req_comp_id_highest_priority is not None:
+                    l_req_comp_id_highest_priority.append(str(req_comp_id_highest_priority))
 
-                    if pk_name == "spo":
-                        average_edu_institution_mark = sub2_row_program.get(
-                            "averageEduInstitutionMark",
-                        )  # Средний балл по аттестату
-                        if average_edu_institution_mark is None:
-                            average_edu_institution_mark = "-"
-                        average_edu_institution_mark_list.append(
-                            average_edu_institution_mark,
-                        )
+                status = sub2_row_program.get("status")
+                if status is not None:
+                    l_status.append(status)
 
-                    total_points = sub2_row_program.get(
-                        "finalMark",
-                    )  # Сумма баллов
-                    if total_points is not None:
-                        l_total_points.append(total_points)
+                if pk_name == "spo":
+                    average_edu_mark = sub2_row_program.get("averageEduInstitutionMark")
+                    average_edu_mark = average_edu_mark if average_edu_mark is not None else "-"
+                    average_edu_institution_mark_list.append(average_edu_mark)
+
+                total_points = sub2_row_program.get("finalMark")
+                if total_points is not None:
+                    l_total_points.append(total_points)
+
+                marks = sub2_row_program.get("marks")
+                if marks is not None:
+                    if pk_name == "spo" and marks == "":
+                        marks = "—"
+                    l_marks.append(marks.split() if marks else [])
+
+                if pk_name == "asp":
+                    total_points_id = 0
+                    for mark_entrant_achievements in sub_row_program.findall("markEntrantAchievements"):
+                        try:
+                            achievement_value = int(mark_entrant_achievements.text.split()[-1])
+                            total_points_id += achievement_value
+                        except Exception:
+                            pass
+                else:
+                    total_points_id = sub2_row_program.get("achievementMark")
+
+                if total_points_id is not None:
+                    l_total_points_id.append(total_points_id)
+
+                original_passed = sub2_row_program.get("originalIn")
+                if original_passed is not None:
+                    if original_passed == "false":
+                        l_original_passed.append("Нет")
+                    elif original_passed == "true":
+                        l_original_passed.append("Да")
+
+                print_priority = sub2_row_program.get("printPriority")
+                if print_priority is not None:
+                    l_print_priority.append(print_priority)
+
+                l_row_entrant_req_com_id_and_ent_id_and_com_id.append(
+                    (entrant_id, req_comp_id_highest_priority, edu_program_id)
+                )
+
+                if pk_name in ("bak", "mag"):
+                    vip_priority = ""
+                    for pr in row_priority:
                         if (
-                            pk_name == "spo"
-                            and status == "Сданы ВИ"
-                            and total_points != "—"
+                            entrant_id == pr[0]
+                            and req_comp_id_highest_priority == pr[1]
+                            and edu_program_id == pr[2]
                         ):
-                            if total_points == "—":
-                                average_edu_institution_mark = (
-                                    average_edu_institution_mark.split()
-                                )
-                                l_total_points.append(
-                                    average_edu_institution_mark,
-                                )
-
-                    marks = sub2_row_program.get(
-                        "marks",
-                    )  # Результаты сдачи вступительных испытаний (по 3 сразу)
-                    if marks is not None:
-                        if pk_name == "spo" and marks == "":
-                            marks = "—"
-                        s = marks.split()
-                        l_marks.append(s)
-                    if pk_name == "asp":
-                        total_points_id = 0
-                        for mark_entrant_achievements in sub_row_program:
-                            achievements = mark_entrant_achievements.findall(
-                                "markEntrantAchievements",
-                            )
-
-                            if achievements:
-                                for achievement in achievements:
-                                    achievement_list = int(
-                                        achievement.text.split(" ")[-1],
-                                    )
-                                    total_points_id += achievement_list
-                                # на выходе total_points_id
-                    else:
-                        total_points_id = sub2_row_program.get(
-                            "achievementMark",
-                        )  # Сумма баллов за индивидуальные достижения
-                    if total_points_id is not None:
-                        l_total_points_id.append(total_points_id)
-
-                    original_passed = sub2_row_program.get(
-                        "originalIn",
-                    )  # Сдан оригинал:да/нет
-                    if original_passed is not None:
-                        if original_passed == "false":
-                            l_original_passed.append("Нет")
-                        if original_passed == "true":
-                            l_original_passed.append("Да")
-
-                    print_priority = sub2_row_program.get(
-                        "printPriority",
-                    )  # Приоритет
-                    if print_priority is not None:
-                        l_print_priority.append(print_priority)
-                    l_row_entrant_req_com_id_and_ent_id_and_com_id.append(
-                        (
-                            entrant_id,
-                            req_comp_id_highest_priority,
-                            edu_program_id,
-                        ),
-                    )
-                    if pk_name in ("bak", "mag"):
-                        vip_priority = " "
-                        for list_row_priority in row_priority:
-                            if (
-                                entrant_id == list_row_priority[0]
-                                and req_comp_id_highest_priority == list_row_priority[1]
-                                and edu_program_id == list_row_priority[2]
-                            ):
-                                if list_row_priority[3] and not list_row_priority[4]:
-                                    vip_priority = "Да"
-                                else:
-                                    vip_priority = ""
-                        l_vip_priority.append(vip_priority)
+                            vip_priority = "Да" if pr[3] and not pr[4] else ""
+                            break
+                    l_vip_priority.append(vip_priority)
 
     if (
         (faculty is not None or pk_name == "spo")
@@ -359,56 +304,33 @@ def process_program(row_program, pk_name, row_priority, l_superServiceCode_in_an
         and (program_spec is not None or pk_name == "spo")
         and (edu_program_form is not None)
         and (compensation_type_short_title is not None)
-        and (edu_program_form is not None)
         and (plan_recruitment is not None)
     ):
         info_list = {
-            "faculty": [],
-            "edu_program_subject": [],
-            "program_spec": [],
-            "edu_program_form": [],
-            "compensation_type_short_title": [],
-            "competition_type": [],
-            "plan_recruitment": [],
-            "statement": [],
-            "colspan": [],
-            "short_title": [],
+            "faculty": [faculty],
+            "edu_program_subject": [edu_program_subject],
+            "program_spec": [program_spec],
+            "edu_program_form": [edu_program_form],
+            "compensation_type_short_title": [compensation_type_short_title],
+            "competition_type": [s_competition_type],
+            "plan_recruitment": [plan_recruitment],
+            "statement": [statement],
+            "colspan": [colspan],
+            "short_title": [l_short_title],
         }
 
-        info_list["faculty"].append(faculty)
-        info_list["edu_program_subject"].append(edu_program_subject)
-        info_list["program_spec"].append(program_spec)
-        info_list["edu_program_form"].append(edu_program_form)
-        info_list["compensation_type_short_title"].append(
-            compensation_type_short_title,
-        )
-        info_list["edu_program_form"].append(edu_program_form)
-        info_list["plan_recruitment"].append(plan_recruitment)
-        info_list["statement"].append(statement)
-        info_list["colspan"].append(colspan)
-        info_list["short_title"].append(l_short_title)
-        info_list["competition_type"].append(s_competition_type)
-
         student_data = {
-            "number": l_number,  # Number
-            "superServiceCode": l_superServiceCode,  # КОДОВ СП или Личный номер
-            "total_points": (
-                average_edu_institution_mark_list
-                if pk_name == "spo"
-                else l_total_points
-            ),  # Сумма баллов
-            "marks": l_marks,  # Результаты ВИ
-            "total_points_id": l_total_points_id,  # Сумма баллов за ИД
-            "preference_category_title": l_preference_category_title,  # Преимущественное право зачисления
-            "original_passed": l_original_passed,  # Сдан оригинал (отметка на ЕПГУ)
-            "print_priority": l_print_priority,  # Приоритет
-            "vip_priority": l_vip_priority,  # Высший приоритет (Да/' ')
-            "accepted": l_l_accepted,  # Согласие на зачисление
-            "status": l_status,  # Статус
-            "targetAdmissionKind": l_targetAdmissionKind,
-            "targetAdmissionExtOrgUnit": l_targetAdmissionExtOrgUnit,
-            "targetAdmissionExtOrgUnitEmployer": l_targetAdmissionExtOrgUnitEmployer,
-            "targetAdmissionOfferId": l_targetAdmissionOfferId,
+            "number": l_number,
+            "superServiceCode": l_superServiceCode,
+            "total_points": average_edu_institution_mark_list if pk_name == "spo" else l_total_points,
+            "marks": l_marks,
+            "total_points_id": l_total_points_id,
+            "preference_category_title": l_preference_category_title,
+            "original_passed": l_original_passed,
+            "print_priority": l_print_priority,
+            "vip_priority": l_vip_priority,
+            "accepted": l_l_accepted,
+            "status": l_status,
         }
         return info_list, student_data
     else:

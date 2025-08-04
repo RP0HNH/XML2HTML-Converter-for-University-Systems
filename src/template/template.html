@@ -197,8 +197,9 @@
                             {% if pk_name == "asp" %}
                             {% endif %}
                             <th rowspan="2">Статус</th>
-                            <th rowspan="2">Примечание</th>
-                            <th rowspan="2">Информация о зачислении</th>
+                            <th rowspan="2">Согласие на зачисление</th>
+                            <th rowspan="2">Договор</th>
+                            <th rowspan="2">Приоритет</th>
                             {% endif %}
                         </tr>
                         {% if information[info_id].short_title[0]|length > 0 %}
@@ -254,7 +255,9 @@
                             <td>{{ student.total_points_id[student_id] }}</td>
                             <td>{{ student.original_passed[student_id] }}</td>
                             <td>{{ student.status[student_id] }}</td>
+                            <td>{{ student.accepted[student_id] }}</td>
                             <td></td>
+                            <td>{{ student.print_priority[student_id] }}</td>
                             <td></td>
                             {% endif %}
                         </tr>
